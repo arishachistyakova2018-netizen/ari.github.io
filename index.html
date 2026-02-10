@@ -10,28 +10,24 @@
 </head>
 <body>
     <div class="container">
-        <!-- Шапка с месяцем -->
         <div class="header">
             <button onclick="prevMonth()">←</button>
-            <h2 id="monthYear">Сентябрь 2024</h2>
+            <h2 id="monthYear">Загрузка...</h2>
             <button onclick="nextMonth()">→</button>
         </div>
 
-        <!-- Дни недели -->
         <div class="weekdays">
             <div>Пн</div><div>Вт</div><div>Ср</div>
             <div>Чт</div><div>Пт</div><div>Сб</div><div>Вс</div>
         </div>
 
-        <!-- Сетка календаря -->
         <div id="calendar" class="calendar"></div>
     </div>
 
-    <!-- Модальное окно для записи -->
     <div id="modal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeModal()">×</span>
-            <h3 id="selectedDate">1 сентября</h3>
+            <h3 id="selectedDate">Дата</h3>
             <div id="existingNotes"></div>
             <textarea id="noteInput" placeholder="Новая запись..."></textarea>
             <button onclick="saveNote()">Добавить запись</button>
