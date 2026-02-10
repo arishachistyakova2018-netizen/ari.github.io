@@ -1,115 +1,84 @@
-// Хранилище привычек (в памяти, для простоты)
-// Для реального приложения используй localStorage
-let habits = JSON.parse(localStorage.getItem('habits')) || [];
-
-// Инициализация
-document.addEventListener('DOMContentLoaded', () => {
-    renderHabits();
-    
-    // Регистрация Service Worker
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js')
-            .then(reg => console.log('SW зарегистрирован'))
-            .catch(err => console.log('SW ошибка:', err));
-    }
-});
-
-// Добавить привычку
-function addHabit() {
-    const input = document.getElementById('habitInput');
-    const name = input.value.trim();
-    
-    if (!name) return;
-    
-    const habit = {
-        id: Date.now(),
-        name: name,
-        completedDays: [] // массив дат в формате "2024-01-15"
-    };
-    
-    habits.push(habit);
-    saveHabits();
-    input.value = '';
-    renderHabits();
-}
-
-// Удалить привычку
-function deleteHabit(id) {
-    habits = habits.filter(h => h.id !== id);
-    saveHabits();
-    renderHabits();
-}
-
-// Переключить выполнение дня
-function toggleDay(habitId, dateStr) {
-    const habit = habits.find(h => h.id === habitId);
-    const index = habit.completedDays.indexOf(dateStr);
-    
-    if (index > -1) {
-        habit.completedDays.splice(index, 1); // убрать отметку
-    } else {
-        habit.completedDays.push(dateStr); // добавить отметку
+<span class="note-text">${note.text}</span>
+                <button class="note-delete" onclick="deleteOneNote(${index})">Удалить</button>
+            `;
+            listDiv.appendChild(noteDiv);
+        });
+        
+        notesList.appendChild(listDiv);
     }
     
-    saveHabits();
-    renderHabits();
+    document.getElementById('noteInput').value = '';
+    document.getElementById('modal').style.display = 'flex';
 }
 
-// Сохранить в localStorage
-function saveHabits() {
-    localStorage.setItem('habits', JSON.stringify(habits));
+// Закрыть модальное окно
+function closeModal() {
+    document.getElementById('modal').style.display = 'none';
+    selectedDate = null;
 }
 
-// Отрисовать всё
-function renderHabits() {
-    const container = document.getElementById('habitsList');
-    container.innerHTML = '';
+// Добавить новую запись
+function saveNote() {
+    if (!selectedDate) return;
     
-    habits.forEach(habit => {
-        const card = createHabitCard(habit);
-        container.appendChild(card);
+    const text = document.getElementById('noteInput').value.trim();
+    if (!text) {
+        closeModal();
+        return;
+    }
+    
+    const dateKey = formatDateKey(selectedDate);
+    
+    if (!notes[dateKey]) {
+        notes[dateKey] = [];
+    }
+    
+    notes[dateKey].push({
+        text: text,
+        time: new Date().toLocaleTimeString('ru-RU', {hour: '2-digit', minute:'2-digit'})
     });
+    
+    localStorage.setItem('calendarNotes', JSON.stringify(notes));
+    renderCalendar();
+    openModal(selectedDate); // Переоткрыть чтобы показать новую запись
 }
 
-// Создать карточку привычки
-function createHabitCard(habit) {
-    const div = document.createElement('div');
-    div.className = 'habit-card';
+// Удалить одну запись
+function deleteOneNote(index) {
+    if (!selectedDate) return;
     
-    // Заголовок
-    const header = document.createElement('div');
-    header.className = 'habit-header';
-    header.innerHTML = 
-        <span class="habit-name">${habit.name}</span>
-        <button class="delete-btn" onclick="deleteHabit(${habit.id})">Удалить</button>
-    ;
+    const dateKey = formatDateKey(selectedDate);
     
-    // Календарь (последние 14 дней)
-    const calendar = document.createElement('div');
-    calendar.className = 'calendar';
-    
-    for (let i = 13; i >= 0; i--) {
-        const date = new Date();
-        date.setDate(date.getDate() - i);
-        const dateStr = date.toISOString().split('T')[0];
-        const dayNum = date.getDate();
-        const isToday = i === 0;
-        const isCompleted = habit.completedDays.includes(dateStr);
+    if (notes[dateKey]) {
+        notes[dateKey].splice(index, 1);
         
-        const dayEl = document.createElement('div');
-        dayEl.className = day ${isCompleted ? 'completed' : ''} ${isToday ? 'today' : ''};
-        dayEl.textContent = dayNum;
-        dayEl.onclick = () => toggleDay(habit.id, dateStr);
+        if (notes[dateKey].length === 0) {
+            delete notes[dateKey];
+        }
         
-        calendar.appendChild(dayEl);
+        localStorage.setItem('calendarNotes', JSON.stringify(notes));
+        renderCalendar();
+        openModal(selectedDate);
     }
-    
-    div.appendChild(header);
-    div.appendChild(calendar);
-    return div;
 }
 
-// Enter для добавления
-document.getElementById('habitInput')?.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') addHabit();
+// Переключение месяцев
+function prevMonth() {
+    currentDate.setMonth(currentDate.getMonth() - 1);
+    renderCalendar();
+}
+
+function nextMonth() {
+    currentDate.setMonth(currentDate.getMonth() + 1);
+    renderCalendar();
+}
+
+// Закрыть по клику вне окна
+document.getElementById('modal').onclick = (e) => {
+    if (e.target.id === 'modal') closeModal();
+};
+
+// Закрыть по Escape
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeModal();
 });
