@@ -1,39 +1,103 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Мой календарь</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#6366f1">
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <button onclick="prevMonth()">←</button>
-            <h2 id="monthYear">Загрузка...</h2>
-            <button onclick="nextMonth()">→</button>
-        </div>
+dayNotes.forEach(function(note, index) {
+                        const noteDiv = document.createElement('div');
+                        noteDiv.className = 'note-item';
+                        noteDiv.innerHTML = 
+                            '<span class="note-text">' + note.text + '</span>' +
+                            '<button class="note-delete" onclick="deleteOneNote(' + index + ')">Удалить</button>';
+                        listDiv.appendChild(noteDiv);
+                    });
+                    
+                    notesList.appendChild(listDiv);
+                }
+            }
+            
+            const noteInput = document.getElementById('noteInput');
+            if (noteInput) {
+                noteInput.value = '';
+            }
+            
+            const modal = document.getElementById('modal');
+            if (modal) {
+                modal.style.display = 'flex';
+            }
+        }
 
-        <div class="weekdays">
-            <div>Пн</div><div>Вт</div><div>Ср</div>
-            <div>Чт</div><div>Пт</div><div>Сб</div><div>Вс</div>
-        </div>
+        function closeModal() {
+            const modal = document.getElementById('modal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+            selectedDate = null;
+        }
 
-        <div id="calendar" class="calendar"></div>
-    </div>
+        function saveNote() {
+            if (!selectedDate) return;
+            
+            const noteInput = document.getElementById('noteInput');
+            if (!noteInput) return;
+            
+            const text = noteInput.value.trim();
+            if (!text) {
+                closeModal();
+                return;
+            }
+            
+            const dateKey = formatDateKey(selectedDate);
+            
+            if (!notes[dateKey]) {
+                notes[dateKey] = [];
+            }
+            
+            const now = new Date();
+            const timeStr = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+            
+            notes[dateKey].push({
+                text: text,
+                time: timeStr
+            });
+            
+            try {
+                localStorage.setItem('calendarNotes', JSON.stringify(notes));
+            } catch (e) {
+                console.error('Ошибка сохранения:', e);
+            }
+            
+            renderCalendar();
+            openModal(selectedDate);
+        }
 
-    <div id="modal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal()">×</span>
-            <h3 id="selectedDate">Дата</h3>
-            <div id="existingNotes"></div>
-            <textarea id="noteInput" placeholder="Новая запись..."></textarea>
-            <button onclick="saveNote()">Добавить запись</button>
-        </div>
-    </div>
+        function deleteOneNote(index) {
+            if (!selectedDate) return;
+            
+            const dateKey = formatDateKey(selectedDate);
+            
+            if (notes[dateKey]) {
+                notes[dateKey].splice(index, 1);
+                
+                if (notes[dateKey].length === 0) {
+                    delete notes[dateKey];
+                }
+                
+                try {
+                    localStorage.setItem('calendarNotes', JSON.stringify(notes));
+                } catch (e) {
+                    console.error('Ошибка сохранения:', e);
+                }
+                
+                renderCalendar();
+                openModal(selectedDate);
+            }
+        }
 
-    <script src="app.js"></script>
+        function prevMonth() {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            renderCalendar();
+        }
+
+        function nextMonth() {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            renderCalendar();
+        }
+    </script>
 </body>
 </html>
