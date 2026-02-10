@@ -1,19 +1,61 @@
-<span class="note-text">${note.text}</span>
-                <button class="note-delete" onclick="deleteOneNote(${index})">Удалить</button>
-            `;
-            listDiv.appendChild(noteDiv);
-        });
-        
-        notesList.appendChild(listDiv);
+// Формат даты для ключа
+function formatDateKey(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return y + '-' + m + '-' + d;
+}
+
+// Открыть модальное окно
+function openModal(date) {
+    selectedDate = date;
+    const dateKey = formatDateKey(date);
+    const dayNotes = notes[dateKey] || [];
+    
+    const selectedDateEl = document.getElementById('selectedDate');
+    if (selectedDateEl) {
+        selectedDateEl.textContent = date.getDate() + ' ' + months[date.getMonth()] + ' ' + date.getFullYear();
     }
     
-    document.getElementById('noteInput').value = '';
-    document.getElementById('modal').style.display = 'flex';
+    // Показать существующие записи
+    const notesList = document.getElementById('existingNotes');
+    if (notesList) {
+        notesList.innerHTML = '';
+        
+        if (dayNotes.length > 0) {
+            const listDiv = document.createElement('div');
+            listDiv.className = 'notes-list';
+            
+            dayNotes.forEach(function(note, index) {
+                const noteDiv = document.createElement('div');
+                noteDiv.className = 'note-item';
+                noteDiv.innerHTML = 
+                    '<span class="note-text">' + note.text + '</span>' +
+                    '<button class="note-delete" onclick="deleteOneNote(' + index + ')">Удалить</button>';
+                listDiv.appendChild(noteDiv);
+            });
+            
+            notesList.appendChild(listDiv);
+        }
+    }
+    
+    const noteInput = document.getElementById('noteInput');
+    if (noteInput) {
+        noteInput.value = '';
+    }
+    
+    const modal = document.getElementById('modal');
+    if (modal) {
+        modal.style.display = 'flex';
+    }
 }
 
 // Закрыть модальное окно
 function closeModal() {
-    document.getElementById('modal').style.display = 'none';
+    const modal = document.getElementById('modal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
     selectedDate = null;
 }
 
@@ -21,7 +63,10 @@ function closeModal() {
 function saveNote() {
     if (!selectedDate) return;
     
-    const text = document.getElementById('noteInput').value.trim();
+    const noteInput = document.getElementById('noteInput');
+    if (!noteInput) return;
+    
+    const text = noteInput.value.trim();
     if (!text) {
         closeModal();
         return;
@@ -33,14 +78,22 @@ function saveNote() {
         notes[dateKey] = [];
     }
     
+    const now = new Date();
+    const timeStr = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+    
     notes[dateKey].push({
         text: text,
-        time: new Date().toLocaleTimeString('ru-RU', {hour: '2-digit', minute:'2-digit'})
+        time: timeStr
     });
     
-    localStorage.setItem('calendarNotes', JSON.stringify(notes));
+    try {
+        localStorage.setItem('calendarNotes', JSON.stringify(notes));
+    } catch (e) {
+        console.error('Ошибка сохранения:', e);
+    }
+    
     renderCalendar();
-    openModal(selectedDate); // Переоткрыть чтобы показать новую запись
+    openModal(selectedDate);
 }
 
 // Удалить одну запись
@@ -56,7 +109,12 @@ function deleteOneNote(index) {
             delete notes[dateKey];
         }
         
-        localStorage.setItem('calendarNotes', JSON.stringify(notes));
+        try {
+            localStorage.setItem('calendarNotes', JSON.stringify(notes));
+        } catch (e) {
+            console.error('Ошибка сохранения:', e);
+        }
+        
         renderCalendar();
         openModal(selectedDate);
     }
@@ -72,13 +130,3 @@ function nextMonth() {
     currentDate.setMonth(currentDate.getMonth() + 1);
     renderCalendar();
 }
-
-// Закрыть по клику вне окна
-document.getElementById('modal').onclick = (e) => {
-    if (e.target.id === 'modal') closeModal();
-};
-
-// Закрыть по Escape
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') closeModal();
-});
