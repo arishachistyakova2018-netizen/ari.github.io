@@ -3,25 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Трекер привычек</title>
+    <title>Мой календарь</title>
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
-    <!-- Для iOS -->
-    <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#6366f1">
 </head>
 <body>
     <div class="container">
-        <h1>📅 Мои привычки</h1>
-        
-        <!-- Форма добавления -->
-        <div class="add-habit">
-            <input type="text" id="habitInput" placeholder="Новая привычка...">
-            <button onclick="addHabit()">+</button>
+        <!-- Шапка с месяцем -->
+        <div class="header">
+            <button onclick="prevMonth()">←</button>
+            <h2 id="monthYear">Сентябрь 2024</h2>
+            <button onclick="nextMonth()">→</button>
         </div>
 
-        <!-- Список привычек -->
-        <div id="habitsList"></div>
+        <!-- Дни недели -->
+        <div class="weekdays">
+            <div>Пн</div><div>Вт</div><div>Ср</div>
+            <div>Чт</div><div>Пт</div><div>Сб</div><div>Вс</div>
+        </div>
+
+        <!-- Сетка календаря -->
+        <div id="calendar" class="calendar"></div>
+    </div>
+
+    <!-- Модальное окно для записи -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">×</span>
+            <h3 id="selectedDate">1 сентября</h3>
+            <div id="existingNotes"></div>
+            <textarea id="noteInput" placeholder="Новая запись..."></textarea>
+            <button onclick="saveNote()">Добавить запись</button>
+        </div>
     </div>
 
     <script src="app.js"></script>
